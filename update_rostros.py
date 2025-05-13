@@ -4,8 +4,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 #Si las carpetas de la base de datos no empiezan numeradas en 0, entonces no se coloca un nombre en el índice 0 de la lista.
-subjects = ["", "Pepe", "Juan","Jose","Miguel","Toño","Manuel", "Adrian","Jesús","Adolfo"]
-#subjects = ["", "1", "2","3","4","5","6", "7","8","9"]
+subjects = ["", "Chester", "Mike","Joe","Brad"]
+#subjects = ["", "1", "2","3","4"]
 
 def detect_face(img):
     #Se convierte la imagen a escala de grises para ser usada por el detector
@@ -96,3 +96,69 @@ print("Datos preparados")
 #Se imprime el total de rostros y etiquetas encontrados
 print("Total faces: ", len(faces))
 print("Total labels: ", len(labels))
+
+#LBPH face recognizer 
+face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+
+
+#Entrena un reconocedor de rostros con las caras de entrenamiento
+face_recognizer.train(faces, np.array(labels))
+
+# fucnión para dibujar un rectángulo en la imagen de acuerdo a las coordenadas (x,y) dadas 
+# con la altura y anchura width and height
+def draw_rectangle(img, rect):
+    (x, y, w, h) = rect
+    cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+# función para dibujar texto en una imagen dada empezando desde las coordenadas (x,y) pasadas
+def draw_text(img, text, x, y):
+    cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 255, 0), 2)
+
+def predict(test_img):
+    #Hacemos una copia para no modificar la imagen original
+    img = test_img.copy()
+    #Se detecta el rostro de la imagen
+    face, rect = detect_face(img)
+
+    #Se predice a que etiqueta pertenece la imagen usando el reconocedor
+    (label,confidence)= face_recognizer.predict(face)
+    #Se obtiene el nombre del sujeto dada la etiqueta predicha
+    label_text = subjects[label]
+    
+    #Se dibuja un rectangulo en donde esta contenido el rostro
+    draw_rectangle(img, rect)
+    #Se coloca el nombre de la persona
+    draw_text(img, label_text, rect[0], rect[1]-5)
+    
+    return img
+
+print("Prediciendo imágenes...")
+
+# Cargar imágenes de prueba (agrega más rutas aquí)
+test_imgs = [
+    cv2.imread("./testdata/s1/9326871.15.jpg"),  
+    cv2.imread("./testdata/s1/9326871.17.jpg"), 
+    cv2.imread("./testdata/s2/9332898.15.jpg"),  
+    cv2.imread("./testdata/s3/9338446.16.jpg"), 
+    cv2.imread("./testdata/s4/9338454.17.jpg"), 
+]
+
+# Predecir y mostrar cada imagen
+for i, test_img in enumerate(test_imgs):
+    if test_img is None:
+        print(f"Error: No se pudo cargar la imagen {i+1}")
+        continue
+    
+    predicted_img = predict(test_img)
+    
+    # Convertir BGR a RGB para matplotlib (OpenCV usa BGR por defecto)
+    predicted_img_rgb = cv2.cvtColor(predicted_img, cv2.COLOR_BGR2RGB)
+    
+    # Mostrar la imagen
+    plt.figure(figsize=(6, 6))
+    plt.imshow(predicted_img_rgb)
+    plt.axis('off')
+    plt.title(f"Predicción {i+1}")
+    plt.show()
+
+print("Predicción completa")
