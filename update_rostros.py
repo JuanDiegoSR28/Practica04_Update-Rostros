@@ -59,3 +59,40 @@ def prepare_training_data(data_folder_path):
         
         #Se obtienen los nombres de las imagenes que estan dentro de cada carpeta
         subject_images_names = os.listdir(subject_dir_path)
+                #------Paso 3--------
+        #Navegamos a través de cada imagen y la leemos
+        #detectamos los rostros y los agregamos a la lista
+        for image_name in subject_images_names:
+            
+            #Para ignorar archivos del sistema como .DS_Store
+            if image_name.startswith("."):
+                continue;
+            
+            #se construye la ruta de la imagen que se va a leer
+            #Ejemplo de ruta = ./images/traindata/s1/1.jpg
+            image_path = subject_dir_path + "/" + image_name
+
+            #leer la imagen
+            image = cv2.imread(image_path)
+                      
+            #detección de rostro (usando la función definida arriba)
+            face, rect = detect_face(image)
+            
+            #------Paso 4--------
+            #Para propositos de este tutorial
+            #se ignoran los rostros que no son detectados
+            if face is not None:
+                #se agrega el rostro a la lista de rostros
+                faces.append(face)
+                #se agrega la etiqueta a la lista de etiquetas
+                labels.append(label)
+                
+    return faces, labels
+
+print("Preparando datos...")
+faces, labels = prepare_training_data("./traindata")
+print("Datos preparados")
+
+#Se imprime el total de rostros y etiquetas encontrados
+print("Total faces: ", len(faces))
+print("Total labels: ", len(labels))
